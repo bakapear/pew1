@@ -11,7 +11,7 @@
     "custom": [
         {
             "name": "osu!",
-            "id": "C:/Users/proxy_n47c1dh/AppData/Local/osu!/osu!.exe"
+            "id": "%localappdata%/osu!/osu!.exe"
         },
         {
             "name": "Google Chrome",
