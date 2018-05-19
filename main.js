@@ -6,7 +6,7 @@ let fs = require("fs")
 
 app.on("ready", init)
 
-let win, icon, showing, first, cfg
+let win, icon, showing, first, cfg, games
 
 async function init() {
     win = new BrowserWindow({
@@ -34,6 +34,21 @@ async function init() {
         }
     },
     {
+        label: "Reload",
+        click: function () {
+            setTimeout(function () {
+                process.on("exit", function () {
+                    cp.spawn(process.argv.shift(), process.argv, {
+                        cwd: process.cwd(),
+                        detached: true,
+                        stdio: "inherit"
+                    });
+                });
+                process.exit(0);
+            }, 250);
+        }
+    },
+    {
         label: "Exit",
         click: function () {
             process.exit(0)
@@ -41,7 +56,7 @@ async function init() {
     }]))
     win.loadURL(`file://${__dirname}/index.html`)
     await loadConfig()
-    let games = await loadSteamGames(cfg.path)
+    games = await loadSteamGames(cfg.path)
     for (let i = 0; i < cfg.custom.length; i++) {
         games.push(cfg.custom[i])
     }
@@ -136,6 +151,22 @@ function shortcuts(win) {
         }
     },
     {
+        label: "Reload",
+        accelerator: "CmdOrCtrl+R",
+        click: function () {
+            setTimeout(function () {
+                process.on("exit", function () {
+                    cp.spawn(process.argv.shift(), process.argv, {
+                        cwd: process.cwd(),
+                        detached: true,
+                        stdio: "inherit"
+                    });
+                });
+                process.exit(0);
+            }, 250);
+        }
+    },
+    {
         label: "Exit",
         accelerator: "CmdOrCtrl+Q",
         click: function () {
@@ -158,7 +189,7 @@ async function loadSteamGames(steamPath) {
     await Promise.all(data)
     let nameRegex = new RegExp("\"name\".*\"(.*)\"")
     let appRegex = new RegExp("\"appid\".*\"(.*)\"")
-    let games = []
+    let lib = []
     for (let i = data.length - 1; i >= 0; i--) {
         let name = nameRegex.exec(data[i])
         if (name === null) continue
@@ -166,9 +197,9 @@ async function loadSteamGames(steamPath) {
         if (id === null) continue
         let obj = { name: name[1], id: id[1] }
         if (cfg.nicks.hasOwnProperty(id[1])) obj.nick = cfg.nicks[id[1]]
-        games.push(obj)
+        lib.push(obj)
     }
-    return games
+    return lib
 }
 
 function search(query, arr) {

@@ -2,7 +2,7 @@ let electronInstaller = require('electron-winstaller')
 
 resultPromise = electronInstaller.createWindowsInstaller({
     appDirectory: './release/pew-win32-x64',
-    outputDirectory: './setup',
+    outputDirectory: './release/setup',
     authors: 'bakapear',
     exe: 'pew.exe',
     icon: './icon.ico',
