@@ -12,3 +12,7 @@ resultPromise = electronInstaller.createWindowsInstaller({
 })
 
 resultPromise.then(() => console.log("It worked!"), (e) => console.log(`No dice: ${e.message}`))
+
+//%repos%/pew >
+//electron-packager . pew --overwrite --icon=icon.ico --prune=true --out=release
+//node installer/win.js
