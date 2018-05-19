@@ -12,5 +12,17 @@
   "devDependencies": {
     "electron": "^2.0.1",
     "electron-winstaller": "^2.6.4"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bakapear/pew.git"
+  },
+  "keywords": [
+    "launcher",
+    "shortcut"
+  ],
+  "bugs": {
+    "url": "https://github.com/bakapear/pew/issues"
+  },
+  "homepage": "https://github.com/bakapear/pew#readme"
 }
