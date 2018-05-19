@@ -1,7 +1,7 @@
 # pew
 ![preview image](http://puu.sh/Ap75J.png)
 
-alt+space launcher for steam made built with electron.
+#### alt+space launcher for steam built with electron.
 
 Program runs in system-tray to listen for the alt+space shortcut and will open a small input field where you can start your steam games (or custom programs). It gets them from your steamapps folder which u might want to specify in the config file. Bugs are expected since this is the first release but from my testing I found nothing *disturbing* yet. 
 
