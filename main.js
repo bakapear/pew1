@@ -26,13 +26,19 @@ async function init() {
         title: "pew"
     })
     icon = new Tray(`${__dirname}/icon.png`)
-    icon.setContextMenu(Menu.buildFromTemplate([
-        {
-            label: "Exit",
-            click: function () {
-                process.exit(0)
-            }
-        }]))
+    icon.setContextMenu(Menu.buildFromTemplate([{
+        label: "Config",
+        click: function () {
+            let start = (process.platform == 'darwin' ? 'open' : process.platform == 'win32' ? 'start' : 'xdg-open')
+            cp.exec(start + " " + app.getPath('userData') + "/" + "config.json")
+        }
+    },
+    {
+        label: "Exit",
+        click: function () {
+            process.exit(0)
+        }
+    }]))
     win.loadURL(`file://${__dirname}/index.html`)
     await loadConfig()
     let games = await loadSteamGames(cfg.path)
@@ -127,6 +133,13 @@ function shortcuts(win) {
                 win.hide()
                 showing = false
             }
+        }
+    },
+    {
+        label: "Exit",
+        accelerator: "CmdOrCtrl+Q",
+        click: function () {
+            process.exit(0)
         }
     }]))
 }
