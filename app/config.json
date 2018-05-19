@@ -1,0 +1,26 @@
+{
+    "path": "C:/Program Files (x86)/Steam/steamapps",
+    "nicks": {
+        "440": [
+            "tf2"
+        ],
+        "730": [
+            "csgo"
+        ]
+    },
+    "custom": [
+        {
+            "name": "osu!",
+            "id": "C:/Users/proxy_n47c1dh/AppData/Local/osu!/osu!.exe"
+        },
+        {
+            "name": "Google Chrome",
+            "nick": [
+                "web",
+                "browser",
+                "internet"
+            ],
+            "id": "chrome"
+        }
+    ]
+}

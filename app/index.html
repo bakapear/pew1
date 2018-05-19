@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>pew</title>
+    <style>
+        body {
+            background-color: rgb(8, 8, 8);
+            overflow: hidden;
+            margin: 0;
+        }
+
+        #field {
+            height: 80px;
+            width: 85vw;
+            font-size: 3em;
+            margin-left: 15px;
+            background: 0;
+            color: white;
+            border: 0;
+            font-family: "Segoe UI", "Helvetica";
+            outline: none;
+        }
+
+        #icon {
+            position: relative;
+            top: 5px;
+            left: 20px;
+            user-select: none;
+            -moz-user-select: none;
+            -webkit-user-drag: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+        }
+
+        div {
+            height: 85px;
+            background-color: black;
+        }
+
+        a {
+            font-family: "Segoe UI", "Helvetica";
+            color: rgba(255, 255, 255, 0.725);
+            font-size: 1.4em;
+            padding-left: 15px;
+            text-decoration: none;
+        }
+
+        a:hover {
+            color: rgba(255, 255, 255, 0.925);
+        }
+    </style>
+    <script>
+        let ipc = require("electron").ipcRenderer
+        window.onload = function () {
+            document.getElementById("field").addEventListener("input", function (evt) {
+                ipc.send("onType", escapeRegExp(this.value))
+            })
+            document.getElementById("button").onclick = function () {
+                ipc.send("onButton")
+            }
+        }
+        function escapeRegExp(str) {
+            return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&")
+        }
+        window.addEventListener("dragover", function (e) {
+            e = e || event
+            e.preventDefault()
+        }, false)
+        window.addEventListener("drop", function (e) {
+            e = e || event
+            e.preventDefault()
+        }, false)
+        function click(data) {
+            ipc.send("onClick", data)
+        }
+    </script>
+</head>
+
+<body>
+    <div>
+        <input autofocus id="field">
+        <a id="button">
+            <img src="icon.png" id="icon">
+        </a>
+    </div>
+    <span id="games">
+    </span>
+</body>
+
+</html>

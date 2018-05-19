@@ -1,0 +1,16 @@
+{
+  "name": "pew",
+  "version": "1.0.0",
+  "description": "alt+space launcher for steam",
+  "main": "app.js",
+  "scripts": {
+    "start": "electron app/app.js"
+  },
+  "author": "bakapear",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "electron": "^2.0.1",
+    "electron-winstaller": "^2.6.4"
+  }
+}
