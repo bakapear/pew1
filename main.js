@@ -1,3 +1,5 @@
+if (require('electron-squirrel-startup')) return
+
 let { app, BrowserWindow, Menu, Tray, globalShortcut, ipcMain } = require('electron')
 let cp = require("child_process")
 let fs = require("fs")
