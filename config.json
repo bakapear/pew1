@@ -10,6 +10,14 @@
     },
     "custom": [
         {
+            "name": "pew configuration",
+            "nick": [
+                "cfg",
+                "config"
+            ],
+            "id": "%appdata%/pew/config.json"
+        },
+        {
             "name": "osu!",
             "id": "%localappdata%/osu!/osu!.exe"
         },
@@ -21,6 +29,15 @@
                 "internet"
             ],
             "id": "chrome"
+        },
+        {
+            "name": "Editor",
+            "nick": [
+                "editor",
+                "notepad",
+                "text"
+            ],
+            "id": "C:/WINDOWS/system32/notepad.exe"
         }
     ]
 }
