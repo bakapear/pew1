@@ -3,9 +3,9 @@
 
 #### alt+space launcher for steam built with electron.
 
-Program runs in system-tray to listen for the alt+space shortcut and will open a small input field where you can start your steam games (or custom programs). It gets them from your steamapps folder which u might want to specify in the config file. Bugs are expected since this is the first release but from my testing I found nothing *disturbing* yet. 
+Program runs in system-tray to listen for the alt+space shortcut and will open a small input field where you can start your steam games (or custom programs). It gets them from your steamapps folder which u might want to specify in the config file. Since v1.2.0 it includes an explorer file search aswell. Bugs are expected because this is still in development but from my testing I found nothing *disturbing* yet. 
 
-[Download it here](https://github.com/bakapear/pew/releases)
+[Download the latest version here](https://github.com/bakapear/pew/releases)
 
 ### Configuration / Custom Programs
 
@@ -28,13 +28,13 @@ You can add custom programs to the search index or give nicknames to existing or
       "id": "%localappdata%/osu!/osu!.exe"
     },
     {
-      "name": "Google Chrome",
+      "name": "Youtube",
       "nick": [
-        "web",
+        "yt",
         "browser",
         "internet"
       ],
-      "id": "chrome"
+      "id": "chrome https://youtube.com/"
     }
   ]
 }
