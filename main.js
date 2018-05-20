@@ -42,10 +42,10 @@ async function init() {
                         cwd: process.cwd(),
                         detached: true,
                         stdio: "inherit"
-                    });
-                });
-                process.exit(0);
-            }, 250);
+                    })
+                })
+                process.exit(0)
+            }, 250)
         }
     },
     {
@@ -86,14 +86,21 @@ function events(win, games) {
         showing = false
     })
 
-    ipcMain.on("onType", (e, data) => {
-        let res = search(data, games)
+    ipcMain.on("onType", async (e, data) => {
+        let res = []
+        if (data.substr(1).startsWith(":\\\\") || data.substr(1).startsWith(":\\\/")) {
+            let paths = data.replace(/\\\\/g, "\\/").split("\\/")
+            res = await searchInDir(paths[paths.length - 1], paths.slice(0, -1).join("/"))
+        }
+        else res = search(data, games)
         let text = ""
-        if (res[0]) first = isNaN(res[0].id) ? "exec:" + res[0].name : res[0].id
+        if (!res) return
+        if (res[0]) first = res[0].hasOwnProperty("exe") ? "path:" + res[0].exe : isNaN(res[0].id) ? "exec:" + res[0].name : res[0].id
         if (data.trim() === "" || res.length < 1) first = undefined
         for (let i = 0; i < res.length; i++) {
             let id = res[i].id
-            if (isNaN(id)) id = "'" + "exec:" + res[i].name + "'"
+            if (res[i].hasOwnProperty("exe")) id = "'" + "path:" + res[i].exe + "'"
+            else if (isNaN(id)) id = "'" + "exec:" + res[i].name + "'"
             let name = res[i].name
             text += `<a href="javascript:click(${id})">${name}</a>`
         }
@@ -160,10 +167,10 @@ function shortcuts(win) {
                         cwd: process.cwd(),
                         detached: true,
                         stdio: "inherit"
-                    });
-                });
-                process.exit(0);
-            }, 250);
+                    })
+                })
+                process.exit(0)
+            }, 250)
         }
     },
     {
@@ -214,6 +221,7 @@ function search(query, arr) {
     }
     return found
 }
+
 function executeProgram(filePath) {
     let execPath = "steam://run/" + filePath
     if (filePath.toString().startsWith("exec:")) {
@@ -224,8 +232,23 @@ function executeProgram(filePath) {
             }
         }
     }
+    else if (filePath.toString().startsWith("path:")) {
+        execPath = filePath.toString().substr(5).replace(/\//g, "\\")
+    }
     let start = (process.platform == 'darwin' ? 'open' : process.platform == 'win32' ? 'start' : 'xdg-open')
     cp.exec(start + " " + execPath)
     first = undefined
     win.webContents.executeJavaScript("document.getElementById('field').value = ''")
+}
+
+async function searchInDir(query, dir) {
+    let regex = new RegExp(query.trim(), "i")
+    let found = []
+    try {
+        let files = await fs.readdirSync(dir + "/", { encoding: "utf-8" })
+        for (let i = 0; i < files.length; i++) {
+            if (files[i].match(regex)) found.push({ name: files[i], exe: "explorer " + dir + "/" + files[i] })
+        }
+        return found
+    } catch (e) { }
 }
