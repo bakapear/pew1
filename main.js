@@ -75,43 +75,33 @@ async function loadConfig() {
 function events(win, games) {
     win.on("close", e => {
         e.preventDefault()
-        win.webContents.executeJavaScript("document.getElementById('field').value = ''")
+        win.webContents.executeJavaScript("document.getElementById('field').value = '';document.getElementById('games').innerHTML = ''")
         win.hide()
         showing = false
     })
 
     win.on("blur", () => {
-        win.webContents.executeJavaScript("document.getElementById('field').value = ''")
+        win.webContents.executeJavaScript("document.getElementById('field').value = '';document.getElementById('games').innerHTML = ''")
         win.hide()
         showing = false
     })
 
-    ipcMain.on("onType", async (e, data) => {
-        let res = []
-        if (data.substr(1).startsWith(":\\\\") || data.substr(1).startsWith(":\\\/")) {
-            let paths = data.replace(/\\\\/g, "\\/").split("\\/")
-            res = await searchInDir(paths[paths.length - 1], paths.slice(0, -1).join("/"))
-        }
-        else res = search(data, games)
-        let text = ""
-        if (!res) return
-        if (res[0]) first = res[0].hasOwnProperty("exe") ? "path:" + res[0].exe : isNaN(res[0].id) ? "exec:" + res[0].name : res[0].id
-        if (data.trim() === "" || res.length < 1) first = undefined
-        for (let i = 0; i < res.length; i++) {
-            let id = res[i].id
-            if (res[i].hasOwnProperty("exe")) id = "'" + "path:" + res[i].exe + "'"
-            else if (isNaN(id)) id = "'" + "exec:" + res[i].name + "'"
-            let name = res[i].name
-            text += `<a href="javascript:click(${id})">${name}</a>`
-        }
-        let code = `document.getElementById("games").innerHTML = \`${text}\``
-        win.webContents.executeJavaScript(code)
+    ipcMain.on("onType", (e, data) => {
+        onType(data)
     })
 
     ipcMain.on("onClick", (e, data) => {
-        executeProgram(data)
-        win.hide()
-        showing = false
+        if (isNaN(data) && data.startsWith("path:")) {
+            let cut = data.substr(data.indexOf(":/") - 1, data.length) + "/"
+            let code = `document.getElementById("field").value = \`${cut}\`;document.getElementById('field').focus()`
+            win.webContents.executeJavaScript(code)
+            onType(escapeRegExp(cut))
+        }
+        else {
+            executeProgram(data)
+            win.hide()
+            showing = false
+        }
     })
 
     ipcMain.on("onButton", (e, data) => {
@@ -126,7 +116,7 @@ function events(win, games) {
 function shortcuts(win) {
     globalShortcut.register('Alt+Space', () => {
         if (showing) {
-            win.webContents.executeJavaScript("document.getElementById('field').value = ''")
+            win.webContents.executeJavaScript("document.getElementById('field').value = '';document.getElementById('games').innerHTML = ''")
             win.hide()
             showing = false
         } else {
@@ -141,7 +131,7 @@ function shortcuts(win) {
         label: "Minimize",
         accelerator: "esc",
         click: function () {
-            win.webContents.executeJavaScript("document.getElementById('field').value = ''")
+            win.webContents.executeJavaScript("document.getElementById('field').value = '';document.getElementById('games').innerHTML = ''")
             win.hide()
             showing = false
         }
@@ -238,7 +228,7 @@ function executeProgram(filePath) {
     let start = (process.platform == 'darwin' ? 'open' : process.platform == 'win32' ? 'start' : 'xdg-open')
     cp.exec(start + " " + execPath)
     first = undefined
-    win.webContents.executeJavaScript("document.getElementById('field').value = ''")
+    win.webContents.executeJavaScript("document.getElementById('field').value = '';document.getElementById('games').innerHTML = ''")
 }
 
 async function searchInDir(query, dir) {
@@ -251,4 +241,30 @@ async function searchInDir(query, dir) {
         }
         return found
     } catch (e) { }
+}
+
+async function onType(data) {
+    let res = []
+    if (data.substr(1).startsWith(":\\\\") || data.substr(1).startsWith(":\\\/")) {
+        let paths = data.replace(/\\\\/g, "\\/").split("\\/")
+        res = await searchInDir(paths[paths.length - 1], paths.slice(0, -1).join("/"))
+    }
+    else res = search(data, games)
+    let text = ""
+    if (!res) return
+    if (res[0]) first = res[0].hasOwnProperty("exe") ? "path:" + res[0].exe : isNaN(res[0].id) ? "exec:" + res[0].name : res[0].id
+    if (data.trim() === "" || res.length < 1) first = undefined
+    for (let i = 0; i < res.length; i++) {
+        let id = res[i].id
+        if (res[i].hasOwnProperty("exe")) id = "'" + "path:" + res[i].exe + "'"
+        else if (isNaN(id)) id = "'" + "exec:" + res[i].name + "'"
+        let name = res[i].name
+        text += `<a href="javascript:click(${id})" tabindex="-1">${name}</a>`
+    }
+    let code = `document.getElementById("games").innerHTML = \`${text}\``
+    win.webContents.executeJavaScript(code)
+}
+
+function escapeRegExp(str) {
+    return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&")
 }
