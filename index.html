@@ -63,6 +63,21 @@
             color: rgba(255, 255, 255, 0.8);
             font-family: "Consolas", "Helvetica";
         }
+
+        #icon {
+            animation: none;
+            animation-duration: 1s;
+            animation-iteration-count: infinite;
+            animation-direction: reverse;
+            animation-timing-function: linear;
+        }
+
+        @keyframes spin {
+            100% {
+                -webkit-transform: rotate(360deg);
+                transform: rotate(360deg);
+            }
+        }
     </style>
     <script>
         let ipc = require("electron").ipcRenderer

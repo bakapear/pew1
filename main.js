@@ -284,8 +284,9 @@ async function getCodeSnippet(query) {
 }
 
 async function showCode() {
-    let html = await getCodeSnippet(field.substr(1))
-    if (html === null) html = "<div>Nothing found!</div>"
-    let code = `document.getElementById("games").innerHTML = \`${html}\``
+    win.webContents.executeJavaScript(`document.getElementById("icon").src = "loading.png";document.getElementById("icon").style.animationName = "spin"`)
+    let snippet = await getCodeSnippet(field.substr(1))
+    if (snippet === null) snippet = "<div>Nothing found!</div>"
+    let code = `document.getElementById("icon").src = "icon.png";document.getElementById("icon").style.animationName = "none";document.getElementById("games").innerHTML = \`<div>${snippet}</div>\``
     win.webContents.executeJavaScript(code)
 }
