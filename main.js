@@ -267,10 +267,11 @@ async function onType(data) {
         if (data.trim() === "" || res.length < 1) first = undefined
         for (let i = 0; i < res.length; i++) {
             let id = res[i].id
-            if (res[i].hasOwnProperty("exe")) id = `"` + "path:" + res[i].exe + `"`
-            else if (isNaN(id)) id = `"` + "exec:" + res[i].name + `"`
+            if (res[i].hasOwnProperty("exe")) id = "'" + "path:" + res[i].exe + "'"
+            else if (isNaN(id)) id = "'" + "exec:" + res[i].name + "'"
             let name = res[i].name
             text += `<a href="javascript:click(${id})" tabindex="-1">${name}</a>`
+            //escape dots
         }
     }
     win.webContents.executeJavaScript(`document.getElementById("games").innerHTML = \`${text}\``)
