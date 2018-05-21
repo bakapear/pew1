@@ -91,6 +91,10 @@ function events(win, games) {
     })
 
     ipcMain.on("onType", (e, data) => {
+        if (data === "") {
+            win.webContents.executeJavaScript(`document.getElementById("games").innerHTML = ""`)
+            return
+        }
         field = data
         onType(data)
     })

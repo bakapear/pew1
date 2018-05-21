@@ -1,4 +1,5 @@
 let ipc = require("electron").ipcRenderer
+
 window.onload = function () {
     let input = document.getElementById("field")
     input.addEventListener("input", function (evt) {
@@ -16,17 +17,21 @@ window.onload = function () {
         ipc.send("onButton")
     }
 }
+
 function escapeRegExp(str) {
     return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&")
 }
+
 window.addEventListener("dragover", function (e) {
     e = e || event
     e.preventDefault()
 }, false)
+
 window.addEventListener("drop", function (e) {
     e = e || event
     e.preventDefault()
 }, false)
+
 function click(data) {
     ipc.send("onClick", data)
 }
