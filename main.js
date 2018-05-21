@@ -1,12 +1,14 @@
-if (require('electron-squirrel-startup')) return
+if (require("electron-squirrel-startup")) return
 
-let { app, BrowserWindow, Menu, Tray, globalShortcut, ipcMain } = require('electron')
+let { app, BrowserWindow, Menu, Tray, globalShortcut, ipcMain } = require("electron")
 let cp = require("child_process")
 let fs = require("fs")
+let got = require("got")
+let cheerio = require("cheerio")
 
 app.on("ready", init)
 
-let win, icon, showing, first, cfg, games
+let win, icon, showing, first, cfg, games, field
 
 async function init() {
     win = new BrowserWindow({
@@ -29,8 +31,8 @@ async function init() {
     icon.setContextMenu(Menu.buildFromTemplate([{
         label: "Config",
         click: function () {
-            let start = (process.platform == 'darwin' ? 'open' : process.platform == 'win32' ? 'start' : 'xdg-open')
-            cp.exec(start + " " + app.getPath('userData') + "/" + "config.json")
+            let start = (process.platform === "darwin" ? "open" : process.platform === "win32" ? "start" : "xdg-open")
+            cp.exec(start + " " + app.getPath("userData") + "/" + "config.json")
         }
     },
     {
@@ -65,7 +67,7 @@ async function init() {
 }
 
 async function loadConfig() {
-    let path = app.getPath('userData') + "/" + "config.json"
+    let path = app.getPath("userData") + "/" + "config.json"
     if (!fs.existsSync(path)) {
         await fs.writeFileSync(path, JSON.stringify(require("./config"), null, 2), { encoding: "utf-8" })
     }
@@ -75,25 +77,26 @@ async function loadConfig() {
 function events(win, games) {
     win.on("close", e => {
         e.preventDefault()
-        win.webContents.executeJavaScript("document.getElementById('field').value = '';document.getElementById('games').innerHTML = ''")
+        win.webContents.executeJavaScript(`document.getElementById("field").value = "";document.getElementById("games").innerHTML = ""`)
         win.hide()
         showing = false
     })
 
     win.on("blur", () => {
-        win.webContents.executeJavaScript("document.getElementById('field').value = '';document.getElementById('games').innerHTML = ''")
+        win.webContents.executeJavaScript(`document.getElementById("field").value = "";document.getElementById("games").innerHTML = ""`)
         win.hide()
         showing = false
     })
 
     ipcMain.on("onType", (e, data) => {
+        field = data
         onType(data)
     })
 
     ipcMain.on("onClick", (e, data) => {
         if (isNaN(data) && data.startsWith("path:")) {
             let cut = data.substr(data.indexOf(":/") - 1, data.length) + "/"
-            let code = `document.getElementById("field").value = \`${cut}\`;document.getElementById('field').focus()`
+            let code = `document.getElementById("field").value = "${cut}";document.getElementById("field").focus()`
             win.webContents.executeJavaScript(code)
             onType(escapeRegExp(cut))
         }
@@ -104,8 +107,9 @@ function events(win, games) {
         }
     })
 
-    ipcMain.on("onButton", (e, data) => {
-        if (first !== undefined) {
+    ipcMain.on("onButton", async (e, data) => {
+        if (field.startsWith("#")) showCode()
+        else if (first !== undefined) {
             executeProgram(first)
             win.hide()
             showing = false
@@ -114,13 +118,13 @@ function events(win, games) {
 }
 
 function shortcuts(win) {
-    globalShortcut.register('Alt+Space', () => {
+    globalShortcut.register("Alt+Space", () => {
         if (showing) {
-            win.webContents.executeJavaScript("document.getElementById('field').value = '';document.getElementById('games').innerHTML = ''")
+            win.webContents.executeJavaScript(`document.getElementById("field").value = "";document.getElementById("games").innerHTML = ""`)
             win.hide()
             showing = false
         } else {
-            win.webContents.executeJavaScript("document.getElementById('field').focus()")
+            win.webContents.executeJavaScript(`document.getElementById("field").focus()`)
             win.show()
             showing = true
         }
@@ -131,7 +135,7 @@ function shortcuts(win) {
         label: "Minimize",
         accelerator: "esc",
         click: function () {
-            win.webContents.executeJavaScript("document.getElementById('field').value = '';document.getElementById('games').innerHTML = ''")
+            win.webContents.executeJavaScript(`document.getElementById("field").value = "";document.getElementById("games").innerHTML = ""`)
             win.hide()
             showing = false
         }
@@ -140,7 +144,8 @@ function shortcuts(win) {
         label: "Start",
         accelerator: "return",
         click: function () {
-            if (first !== undefined) {
+            if (field.startsWith("#")) showCode()
+            else if (first !== undefined) {
                 executeProgram(first)
                 win.hide()
                 showing = false
@@ -225,10 +230,10 @@ function executeProgram(filePath) {
     else if (filePath.toString().startsWith("path:")) {
         execPath = filePath.toString().substr(5).replace(/\//g, "\\")
     }
-    let start = (process.platform == 'darwin' ? 'open' : process.platform == 'win32' ? 'start' : 'xdg-open')
+    let start = (process.platform === "darwin" ? "open" : process.platform === "win32" ? "start" : "xdg-open")
     cp.exec(start + " " + execPath)
     first = undefined
-    win.webContents.executeJavaScript("document.getElementById('field').value = '';document.getElementById('games').innerHTML = ''")
+    win.webContents.executeJavaScript(`document.getElementById("field").value = "";document.getElementById("games").innerHTML = ""`)
 }
 
 async function searchInDir(query, dir) {
@@ -244,22 +249,24 @@ async function searchInDir(query, dir) {
 }
 
 async function onType(data) {
-    let res = []
-    if (data.substr(1).startsWith(":\\\\") || data.substr(1).startsWith(":\\\/")) {
-        let paths = data.replace(/\\\\/g, "\\/").split("\\/")
-        res = await searchInDir(paths[paths.length - 1], paths.slice(0, -1).join("/"))
-    }
-    else res = search(data, games)
     let text = ""
-    if (!res) return
-    if (res[0]) first = res[0].hasOwnProperty("exe") ? "path:" + res[0].exe : isNaN(res[0].id) ? "exec:" + res[0].name : res[0].id
-    if (data.trim() === "" || res.length < 1) first = undefined
-    for (let i = 0; i < res.length; i++) {
-        let id = res[i].id
-        if (res[i].hasOwnProperty("exe")) id = "'" + "path:" + res[i].exe + "'"
-        else if (isNaN(id)) id = "'" + "exec:" + res[i].name + "'"
-        let name = res[i].name
-        text += `<a href="javascript:click(${id})" tabindex="-1">${name}</a>`
+    if (!data.startsWith("#")) {
+        let res = []
+        if (data.substr(1).startsWith(":\\\\") || data.substr(1).startsWith(":\\\/")) {
+            let paths = data.replace(/\\\\/g, "\\/").split("\\/")
+            res = await searchInDir(paths[paths.length - 1], paths.slice(0, -1).join("/"))
+        }
+        else res = search(data, games)
+        if (!res) return
+        if (res[0]) first = res[0].hasOwnProperty("exe") ? "path:" + res[0].exe : isNaN(res[0].id) ? "exec:" + res[0].name : res[0].id
+        if (data.trim() === "" || res.length < 1) first = undefined
+        for (let i = 0; i < res.length; i++) {
+            let id = res[i].id
+            if (res[i].hasOwnProperty("exe")) id = `"` + "path:" + res[i].exe + `"`
+            else if (isNaN(id)) id = `"` + "exec:" + res[i].name + `"`
+            let name = res[i].name
+            text += `<a href="javascript:click(${id})" tabindex="-1">${name}</a>`
+        }
     }
     let code = `document.getElementById("games").innerHTML = \`${text}\``
     win.webContents.executeJavaScript(code)
@@ -267,4 +274,18 @@ async function onType(data) {
 
 function escapeRegExp(str) {
     return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&")
+}
+
+async function getCodeSnippet(query) {
+    let url = "https://www.bing.com/search?q=" + encodeURIComponent(query)
+    let body = (await got(url)).body
+    let $ = cheerio.load(body)
+    return $(".cCodeBg").html()
+}
+
+async function showCode() {
+    let html = await getCodeSnippet(field.substr(1))
+    if (html === null) html = "<div>Nothing found!</div>"
+    let code = `document.getElementById("games").innerHTML = \`${html}\``
+    win.webContents.executeJavaScript(code)
 }

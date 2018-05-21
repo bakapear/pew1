@@ -9,7 +9,9 @@
   "author": "bakapear",
   "license": "MIT",
   "dependencies": {
-    "electron-squirrel-startup": "^1.0.0"
+    "cheerio": "^1.0.0-rc.2",
+    "electron-squirrel-startup": "^1.0.0",
+    "got": "^8.3.1"
   },
   "devDependencies": {
     "electron": "^2.0.1",
