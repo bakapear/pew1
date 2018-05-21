@@ -5,6 +5,8 @@ let cp = require("child_process")
 let fs = require("fs")
 let got = require("got")
 let cheerio = require("cheerio")
+let Syntax = require("syntax")
+let syntax = new Syntax({ language: "auto", cssPrefix: "" })
 
 app.on("ready", init)
 
@@ -27,7 +29,7 @@ async function init() {
         fullscreenable: false,
         title: "pew"
     })
-    icon = new Tray(`${__dirname}/icon.png`)
+    icon = new Tray(`${__dirname}/icon.ico`)
     icon.setContextMenu(Menu.buildFromTemplate([{
         label: "Config",
         click: function () {
@@ -56,7 +58,7 @@ async function init() {
             process.exit(0)
         }
     }]))
-    win.loadURL(`file://${__dirname}/index.html`)
+    win.loadURL(`file://${__dirname}/web/index.html`)
     await loadConfig()
     games = await loadSteamGames(cfg.path)
     for (let i = 0; i < cfg.custom.length; i++) {
@@ -96,8 +98,7 @@ function events(win, games) {
     ipcMain.on("onClick", (e, data) => {
         if (isNaN(data) && data.startsWith("path:")) {
             let cut = data.substr(data.indexOf(":/") - 1, data.length) + "/"
-            let code = `document.getElementById("field").value = "${cut}";document.getElementById("field").focus()`
-            win.webContents.executeJavaScript(code)
+            win.webContents.executeJavaScript(`document.getElementById("field").value = "${cut}";document.getElementById("field").focus()`)
             onType(escapeRegExp(cut))
         }
         else {
@@ -268,8 +269,7 @@ async function onType(data) {
             text += `<a href="javascript:click(${id})" tabindex="-1">${name}</a>`
         }
     }
-    let code = `document.getElementById("games").innerHTML = \`${text}\``
-    win.webContents.executeJavaScript(code)
+    win.webContents.executeJavaScript(`document.getElementById("games").innerHTML = \`${text}\``)
 }
 
 function escapeRegExp(str) {
@@ -280,13 +280,14 @@ async function getCodeSnippet(query) {
     let url = "https://www.bing.com/search?q=" + encodeURIComponent(query)
     let body = (await got(url)).body
     let $ = cheerio.load(body)
-    return $(".cCodeBg").html()
+    return $(".cCodeBg").text()
+    // --> put $codebg.text() in seperate lines instead of .html
 }
 
 async function showCode() {
-    win.webContents.executeJavaScript(`document.getElementById("icon").src = "loading.png";document.getElementById("icon").style.animationName = "spin"`)
+    win.webContents.executeJavaScript(`document.getElementById("icon").src = "assets/loading.png";document.getElementById("icon").style.animationName = "spin"`)
     let snippet = await getCodeSnippet(field.substr(1))
-    if (snippet === null) snippet = "<div>Nothing found!</div>"
-    let code = `document.getElementById("icon").src = "icon.png";document.getElementById("icon").style.animationName = "none";document.getElementById("games").innerHTML = \`<div>${snippet}</div>\``
-    win.webContents.executeJavaScript(code)
+    syntax.richtext(snippet)
+    if (snippet === "") snippet = "<div>Nothing found!</div>"
+    win.webContents.executeJavaScript(`document.getElementById("icon").src = "assets/icon.png";document.getElementById("icon").style.animationName = "none";document.getElementById("games").innerHTML = \`<div>${syntax.html()}</div>\``)
 }
