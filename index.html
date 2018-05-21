@@ -57,9 +57,18 @@
     <script>
         let ipc = require("electron").ipcRenderer
         window.onload = function () {
-            document.getElementById("field").addEventListener("input", function (evt) {
+            let input = document.getElementById("field")
+            input.addEventListener("input", function (evt) {
                 ipc.send("onType", escapeRegExp(this.value))
             })
+
+            input.addEventListener("keydown", function (evt) {
+                if (evt.keyCode === 9) {
+                    evt.preventDefault()
+                    this.focus()
+                }
+            })
+
             document.getElementById("button").onclick = function () {
                 ipc.send("onButton")
             }
