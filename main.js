@@ -151,7 +151,8 @@ function shortcuts(win) {
         click: function () {
             if (field.startsWith("#")) showCode()
             else if (first !== undefined) {
-                executeProgram(first)
+                let path = field.endsWith("/") ? first.substring(0, first.lastIndexOf("/")) : first
+                executeProgram(path)
                 win.hide()
                 showing = false
             }
