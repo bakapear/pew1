@@ -33,5 +33,5 @@ window.addEventListener("drop", function (e) {
 }, false)
 
 function click(data) {
-    ipc.send("onClick", data)
+    ipc.send("onClick", decodeURIComponent(data))
 }

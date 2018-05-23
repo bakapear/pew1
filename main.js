@@ -271,8 +271,7 @@ async function onType(data) {
             if (res[i].hasOwnProperty("exe")) id = "'" + "path:" + res[i].exe + "'"
             else if (isNaN(id)) id = "'" + "exec:" + res[i].name + "'"
             let name = res[i].name
-            text += `<a href="javascript:click(${id})" tabindex="-1">${name}</a>`
-            //escape dots
+            text += `<a href="javascript:click(${encodeURIComponent(id)})" tabindex="-1">${name}</a>`
         }
     }
     win.webContents.executeJavaScript(`document.getElementById("games").innerHTML = \`${text}\``)
