@@ -114,6 +114,7 @@ function events(win, games) {
 
     ipcMain.on("onButton", async (e, data) => {
         if (field.startsWith("#")) showCode()
+        else if (field.startsWith("\\?")) showDef()
         else if (first !== undefined) {
             executeProgram(first)
             win.hide()
@@ -150,6 +151,7 @@ function shortcuts(win) {
         accelerator: "return",
         click: function () {
             if (field.startsWith("#")) showCode()
+            else if (field.startsWith("\\?")) showDef()
             else if (first !== undefined) {
                 let path = field.endsWith("/") ? first.substring(0, first.lastIndexOf("/")) : first
                 executeProgram(path)
@@ -256,7 +258,7 @@ async function searchInDir(query, dir) {
 
 async function onType(data) {
     let text = ""
-    if (!data.startsWith("#")) {
+    if (!(data.startsWith("#") || data.startsWith("\\?"))) {
         let res = []
         if (data.substr(1).startsWith(":\\\\") || data.substr(1).startsWith(":\\\/")) {
             let paths = data.replace(/\\\\/g, "\\/").split("\\/")
@@ -286,7 +288,7 @@ async function getCodeSnippet(query) {
     let body = (await got(url)).body
     let $ = cheerio.load(body)
     return $(".cCodeBg").text()
-    // --> put $codebg.text() in seperate lines instead of .html
+    // --> put $codebg.text() in seperate lines instead of .html | ^001
 }
 
 async function showCode() {
@@ -295,4 +297,20 @@ async function showCode() {
     syntax.richtext(snippet)
     if (snippet === "") snippet = "<div>Nothing found!</div>"
     win.webContents.executeJavaScript(`document.getElementById("icon").src = "assets/icon.png";document.getElementById("icon").style.animationName = "none";document.getElementById("games").innerHTML = \`<div>${syntax.html()}</div>\``)
+}
+
+async function showDef() {
+    win.webContents.executeJavaScript(`document.getElementById("icon").src = "assets/loading.png";document.getElementById("icon").style.animationName = "spin"`)
+    let def = await getUrbanDef(field.substr(2))
+    if (def === null) def = "Nothing found!"
+    win.webContents.executeJavaScript(`document.getElementById("icon").src = "assets/icon.png";document.getElementById("icon").style.animationName = "none";document.getElementById("games").innerHTML = \`<div>${def}</div>\``)
+}
+
+async function getUrbanDef(query) {
+    try {
+        let url = "https://www.urbandictionary.com/define.php?term=" + encodeURIComponent(query)
+        let body = (await got(url)).body
+        let $ = cheerio.load(body)
+        return $(".meaning").first().text()
+    } catch (e) { return null }
 }
