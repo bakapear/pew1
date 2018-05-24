@@ -106,7 +106,7 @@ function events(win, games) {
         if (isNaN(data) && data.startsWith("path:")) {
             let cut = data.substr(data.indexOf(":/") - 1, data.length) + "/"
             win.webContents.executeJavaScript(`document.getElementById("field").value = "${cut}";document.getElementById("field").focus()`)
-            onType(escapeRegExp(cut))
+            onType(cut)
         }
         else {
             executeProgram(data)
@@ -205,6 +205,7 @@ async function loadSteamGames(steamPath) {
 }
 
 function search(query, arr) {
+    query = escapeRegExp(query)
     let regex = new RegExp(query.trim(), "i")
     let found = []
     for (let i = 0; i < arr.length; i++) {
@@ -237,6 +238,7 @@ function executeProgram(filePath) {
 }
 
 async function searchInDir(query, dir) {
+    query = escapeRegExp(query)
     let regex = new RegExp(query.trim(), "i")
     let found = []
     try {
@@ -252,8 +254,8 @@ async function onType(data) {
     let text = ""
     if (!keys.includes(key)) {
         let res = []
-        if (data.substr(1).startsWith(":\\\\") || data.substr(1).startsWith(":\\\/")) {
-            let paths = data.replace(/\\\\/g, "\\/").split("\\/")
+        if (data.substr(1).startsWith(":/") || data.substr(1).startsWith(":\\")) {
+            let paths = data.replace(/\\/g, "/").split("/")
             res = await searchInDir(paths[paths.length - 1], paths.slice(0, -1).join("/"))
         }
         else res = search(data, games)
@@ -297,7 +299,6 @@ async function getUrbanDef(query) {
 
 async function doMath(query) {
     try {
-        query = query.replace(/\\/g, "")
         let url = "http://api.mathjs.org/v4/?expr=" + encodeURIComponent(query)
         let body = (await got(url)).body
         return body
@@ -314,7 +315,10 @@ async function showResult(key) {
             res = await getUrbanDef(field)
             break
         case "/":
-            cp.exec("start https://google.com/search?q=" + encodeURIComponent(field))
+            let prefix = ""
+            break
+            if (checkURL(field)) prefix = "https://google.com/search?q="
+            cp.exec("start " + prefix + encodeURIComponent(field))
             return
         case "=":
             res = await doMath(field)
@@ -326,4 +330,8 @@ async function showResult(key) {
 
 function clearField() {
     win.webContents.executeJavaScript(`document.getElementById("field").value = "";document.getElementById("games").innerHTML = ""; document.getElementById("special").innerHTML = ">"`)
+}
+
+async function checkURL(url) {
+    try { return await got(url) } catch (e) { return e }
 }

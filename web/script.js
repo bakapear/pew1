@@ -10,7 +10,7 @@ window.onload = function () {
             key.innerHTML = this.value[0]
             this.value = this.value.substring(1)
         }
-        ipc.send("onType", [escapeRegExp(this.value), key.innerHTML])
+        ipc.send("onType", [this.value, key.innerHTML])
     })
     input.addEventListener("keydown", function (evt) {
         if (evt.keyCode === 9) {
@@ -18,10 +18,6 @@ window.onload = function () {
             this.focus()
         }
     })
-}
-
-function escapeRegExp(str) {
-    return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&")
 }
 
 window.addEventListener("dragover", function (e) {
