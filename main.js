@@ -315,10 +315,7 @@ async function showResult(key) {
             res = await getUrbanDef(field)
             break
         case "/":
-            let prefix = ""
-            break
-            if (checkURL(field)) prefix = "https://google.com/search?q="
-            cp.exec("start " + prefix + encodeURIComponent(field))
+            cp.exec("start https://google.com/search?q=" + encodeURIComponent(field))
             return
         case "=":
             res = await doMath(field)
@@ -330,8 +327,4 @@ async function showResult(key) {
 
 function clearField() {
     win.webContents.executeJavaScript(`document.getElementById("field").value = "";document.getElementById("games").innerHTML = ""; document.getElementById("special").innerHTML = ">"`)
-}
-
-async function checkURL(url) {
-    try { return await got(url) } catch (e) { return e }
 }
