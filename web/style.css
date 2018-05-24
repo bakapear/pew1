@@ -53,6 +53,10 @@ a:hover {
     color: rgba(255, 255, 255, 0.925);
 }
 
+a:focus {
+    outline: none;
+}
+
 #games div {
     background-color: transparent;
     margin-top: 7px;
