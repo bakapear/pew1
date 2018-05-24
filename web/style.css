@@ -1,25 +1,31 @@
 body {
     background-color: rgb(8, 8, 8);
+    font-family: "Segoe UI", "Helvetica";
     overflow: hidden;
     margin: 0;
 }
 
+#special {
+    color: rgba(255, 255, 255, 0.75);
+    font-family: "Consolas", "monospace";
+    font-size: 2.75em;
+    position: absolute;
+    left: 12px;
+    top: 14px;
+}
+
 #field {
+    margin-left: 45px;
     height: 80px;
-    width: 85vw;
+    width: 90vw;
     font-size: 3em;
-    margin-left: 15px;
     background: 0;
     color: white;
     border: 0;
-    font-family: "Segoe UI", "Helvetica";
     outline: none;
 }
 
-#icon {
-    position: relative;
-    top: 5px;
-    left: 20px;
+img {
     user-select: none;
     -moz-user-select: none;
     -webkit-user-drag: none;
@@ -33,7 +39,6 @@ div {
 }
 
 a {
-    font-family: "Segoe UI", "Helvetica";
     color: rgba(255, 255, 255, 0.725);
     font-size: 1.4em;
     padding-left: 15px;
@@ -55,7 +60,7 @@ a:hover {
     float: left;
     font-size: 1.0em;
     color: rgba(255, 255, 255, 0.8);
-    font-family: "Consolas", "Helvetica";
+    font-family: "Consolas", "monospace";
 }
 
 #icon {

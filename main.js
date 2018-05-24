@@ -10,7 +10,9 @@ let syntax = new Syntax({ language: "auto", cssPrefix: "" })
 
 app.on("ready", init)
 
-let win, icon, showing, first, cfg, games, field
+let keys = ["#", "?", "/", "="]
+
+let win, icon, showing, first, cfg, games, field, key
 
 async function init() {
     win = new BrowserWindow({
@@ -79,24 +81,25 @@ async function loadConfig() {
 function events(win, games) {
     win.on("close", e => {
         e.preventDefault()
-        win.webContents.executeJavaScript(`document.getElementById("field").value = "";document.getElementById("games").innerHTML = ""`)
+        clearField()
         win.hide()
         showing = false
     })
 
     win.on("blur", () => {
-        win.webContents.executeJavaScript(`document.getElementById("field").value = "";document.getElementById("games").innerHTML = ""`)
+        clearField()
         win.hide()
         showing = false
     })
 
     ipcMain.on("onType", (e, data) => {
-        if (data === "") {
+        if (data[0] === "") {
             win.webContents.executeJavaScript(`document.getElementById("games").innerHTML = ""`)
             return
         }
-        field = data
-        onType(data)
+        field = data[0]
+        key = data[1]
+        onType(data[0])
     })
 
     ipcMain.on("onClick", (e, data) => {
@@ -111,22 +114,12 @@ function events(win, games) {
             showing = false
         }
     })
-
-    ipcMain.on("onButton", async (e, data) => {
-        if (field.startsWith("#")) showCode()
-        else if (field.startsWith("\\?")) showDef()
-        else if (first !== undefined) {
-            executeProgram(first)
-            win.hide()
-            showing = false
-        }
-    })
 }
 
 function shortcuts(win) {
     globalShortcut.register("Alt+Space", () => {
         if (showing) {
-            win.webContents.executeJavaScript(`document.getElementById("field").value = "";document.getElementById("games").innerHTML = ""`)
+            clearField()
             win.hide()
             showing = false
         } else {
@@ -141,7 +134,7 @@ function shortcuts(win) {
         label: "Minimize",
         accelerator: "esc",
         click: function () {
-            win.webContents.executeJavaScript(`document.getElementById("field").value = "";document.getElementById("games").innerHTML = ""`)
+            clearField()
             win.hide()
             showing = false
         }
@@ -150,8 +143,7 @@ function shortcuts(win) {
         label: "Start",
         accelerator: "return",
         click: function () {
-            if (field.startsWith("#")) showCode()
-            else if (field.startsWith("\\?")) showDef()
+            if (key !== "&gt;") showResult(key)
             else if (first !== undefined) {
                 let path = field.endsWith("/") ? first.substring(0, first.lastIndexOf("/")) : first
                 executeProgram(path)
@@ -241,7 +233,7 @@ function executeProgram(filePath) {
     let start = (process.platform === "darwin" ? "open" : process.platform === "win32" ? "start" : "xdg-open")
     cp.exec(start + " " + execPath)
     first = undefined
-    win.webContents.executeJavaScript(`document.getElementById("field").value = "";document.getElementById("games").innerHTML = ""`)
+    clearField()
 }
 
 async function searchInDir(query, dir) {
@@ -258,7 +250,7 @@ async function searchInDir(query, dir) {
 
 async function onType(data) {
     let text = ""
-    if (!(data.startsWith("#") || data.startsWith("\\?"))) {
+    if (!keys.includes(key)) {
         let res = []
         if (data.substr(1).startsWith(":\\\\") || data.substr(1).startsWith(":\\\/")) {
             let paths = data.replace(/\\\\/g, "\\/").split("\\/")
@@ -284,26 +276,14 @@ function escapeRegExp(str) {
 }
 
 async function getCodeSnippet(query) {
-    let url = "https://www.bing.com/search?q=" + encodeURIComponent(query)
-    let body = (await got(url)).body
-    let $ = cheerio.load(body)
-    return $(".cCodeBg").text()
+    try {
+        let url = "https://www.bing.com/search?q=" + encodeURIComponent(query)
+        let body = (await got(url)).body
+        let $ = cheerio.load(body)
+        let snippet = $(".cCodeBg").text()
+        return syntax.richtext(snippet).html()
+    } catch (e) { return "" }
     // --> put $codebg.text() in seperate lines instead of .html | ^001
-}
-
-async function showCode() {
-    win.webContents.executeJavaScript(`document.getElementById("icon").src = "assets/loading.png";document.getElementById("icon").style.animationName = "spin"`)
-    let snippet = await getCodeSnippet(field.substr(1))
-    if (snippet === "") snippet = "Nothing found!"
-    snippet = syntax.richtext(snippet).html()
-    win.webContents.executeJavaScript(`document.getElementById("icon").src = "assets/icon.png";document.getElementById("icon").style.animationName = "none";document.getElementById("games").innerHTML = \`<div>${snippet}</div>\``)
-}
-
-async function showDef() {
-    win.webContents.executeJavaScript(`document.getElementById("icon").src = "assets/loading.png";document.getElementById("icon").style.animationName = "spin"`)
-    let def = await getUrbanDef(field.substr(2))
-    if (def === null) def = "Nothing found!"
-    win.webContents.executeJavaScript(`document.getElementById("icon").src = "assets/icon.png";document.getElementById("icon").style.animationName = "none";document.getElementById("games").innerHTML = \`<div>${def}</div>\``)
 }
 
 async function getUrbanDef(query) {
@@ -312,5 +292,38 @@ async function getUrbanDef(query) {
         let body = (await got(url)).body
         let $ = cheerio.load(body)
         return $(".meaning").first().text()
-    } catch (e) { return null }
+    } catch (e) { return "" }
+}
+
+async function doMath(query) {
+    try {
+        query = query.replace(/\\/g, "")
+        let url = "http://api.mathjs.org/v4/?expr=" + encodeURIComponent(query)
+        let body = (await got(url)).body
+        return body
+    } catch (e) { return e.response.body }
+}
+
+async function showResult(key) {
+    let res = ""
+    switch (key) {
+        case "#":
+            res = await getCodeSnippet(field)
+            break
+        case "?":
+            res = await getUrbanDef(field)
+            break
+        case "/":
+            cp.exec("start https://google.com/search?q=" + encodeURIComponent(field))
+            return
+        case "=":
+            res = await doMath(field)
+            break
+    }
+    if (res === "") res = "Nothing found!"
+    win.webContents.executeJavaScript(`document.getElementById("games").innerHTML = \`<div>${res}</div>\``)
+}
+
+function clearField() {
+    win.webContents.executeJavaScript(`document.getElementById("field").value = "";document.getElementById("games").innerHTML = ""; document.getElementById("special").innerHTML = ">"`)
 }
