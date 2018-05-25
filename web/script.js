@@ -1,6 +1,6 @@
 let ipc = require("electron").ipcRenderer
 
-let keys = [">", "#", "?", "/", "="]
+let keys = [">", "#", "?", "/", "=", "@"]
 
 window.onload = function () {
     let input = document.getElementById("field")

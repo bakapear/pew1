@@ -7,12 +7,15 @@ let got = require("got")
 let cheerio = require("cheerio")
 let Syntax = require("syntax")
 let syntax = new Syntax({ language: "auto", cssPrefix: "", newlineReplace: "<br>" })
+let Discord = require("discord.js")
+let client = new Discord.Client()
+let moment = require("moment")
 
 app.on("ready", init)
 
-let keys = ["#", "?", "/", "="]
+let keys = ["#", "?", "/", "=", "@"]
 
-let win, icon, showing, first, cfg, games, field, key, width = 800, height = 120
+let win, icon, showing, first, cfg, games, field, key, width = 800, height = 120, clientReady = false
 
 async function init() {
     win = new BrowserWindow({
@@ -314,6 +317,27 @@ async function doMath(query) {
     } catch (e) { return e.response.body }
 }
 
+async function sendDiscordMessage(query) {
+    query = query.split(">")
+    if (cfg.discord.token === "") return "No Discord Token provided in config!"
+    if (cfg.discord.guildId === "") return "No Guild ID specified in config!"
+    if (!clientReady) await client.login(cfg.discord.token).then(clientReady = true)
+    let guild = client.guilds.get(cfg.discord.guildId)
+    let channel = guild.channels.find("name", query[0])
+    if (channel === null) return "Channel not found!"
+    if (channel.type !== "text") return "That's not a text channel!"
+    if (!query[1]) {
+        let msgs = await channel.fetchMessages({ limit: 5 })
+        let content = ""
+        msgs.forEach(msg => {
+            content += moment.utc(msg.createdTimestamp).format('HH:mm') + " - <span class=\"literal\">" + escapeHtml(msg.author.username) + "</span>: " + escapeHtml(msg.content) + "<br>"
+        })
+        return content
+    }
+    channel.send(query[1])
+    return `Sent <span class=\"literal\">${escapeHtml(query[1])}</span> to #${escapeHtml(query[0])}.`
+}
+
 async function showResult(key) {
     win.webContents.executeJavaScript(`document.getElementById("games").innerHTML = \`<div id="box">Loading...</div>\``)
     let res = ""
@@ -330,6 +354,9 @@ async function showResult(key) {
         case "=":
             res = await doMath(field)
             break
+        case "@":
+            res = await sendDiscordMessage(field)
+            break
     }
     if (res === "") res = "Nothing found!"
     win.webContents.executeJavaScript(`document.getElementById("games").innerHTML = \`<div id="box">${res}</div>\``)
@@ -340,4 +367,13 @@ function resetView(key) {
     if (!key) key = ">"
     win.webContents.executeJavaScript(`document.getElementById("field").value = "";document.getElementById("games").innerHTML = ""; document.getElementById("special").innerHTML = "${key}"`)
     win.setSize(width, height)
+}
+
+function escapeHtml(unsafe) {
+    return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }

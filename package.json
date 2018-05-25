@@ -10,8 +10,10 @@
   "license": "MIT",
   "dependencies": {
     "cheerio": "^1.0.0-rc.2",
+    "discord.js": "^11.3.2",
     "electron-squirrel-startup": "^1.0.0",
     "got": "^8.3.1",
+    "moment": "^2.22.1",
     "syntax": "^1.4.4"
   },
   "devDependencies": {
