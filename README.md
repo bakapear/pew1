@@ -51,3 +51,4 @@ You can add custom programs to the search index or give nicknames to existing or
 ![preview image 2](https://puu.sh/AsBsu.png)
 ![preview image 3](https://puu.sh/AsBqR.png)
 ![preview image 4](https://puu.sh/AsBrP.png)
+![preview image 5](https://puu.sh/AsBAd.png)
