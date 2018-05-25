@@ -18,6 +18,10 @@ window.onload = function () {
             this.focus()
         }
     })
+    ipc.on("getDiv", () => {
+        let height = document.getElementById("box").clientHeight
+        ipc.send("changeSize", height)
+    })
 }
 
 window.addEventListener("dragover", function (e) {

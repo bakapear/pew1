@@ -6,10 +6,10 @@
 Program runs in system-tray to listen for the alt+space shortcut and will open a small input field where you can start your steam games (or custom programs). It gets them from your steamapps folder which u might want to specify in the config file. Since v1.2.0 it includes an explorer file search and special tasks (math, google, urbandir) aswell. Bugs are expected because this is still in development but from my testing I found nothing *disturbing* yet. 
 
 ### Special Stuff
-`>` - Steam Game Search
-`#` - Code Search
-`?` - Urban Dictionary Search
-`\` - Google Search
+`>` - Steam Game Search <br>
+`#` - Code Search <br>
+`?` - Urban Dictionary Search <br>
+`\` - Google Search <br>
 (Not released yet)
 
 [Download the latest version here](https://github.com/bakapear/pew/releases)

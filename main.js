@@ -12,13 +12,13 @@ app.on("ready", init)
 
 let keys = ["#", "?", "/", "="]
 
-let win, icon, showing, first, cfg, games, field, key
+let win, icon, showing, first, cfg, games, field, key, width = 800, height = 120
 
 async function init() {
     win = new BrowserWindow({
         center: true,
-        width: 800,
-        height: 120,
+        width: width,
+        height: height,
         frame: false,
         skipTaskbar: true,
         show: false,
@@ -81,13 +81,13 @@ async function loadConfig() {
 function events(win, games) {
     win.on("close", e => {
         e.preventDefault()
-        clearField()
+        resetView()
         win.hide()
         showing = false
     })
 
     win.on("blur", () => {
-        clearField()
+        resetView()
         win.hide()
         showing = false
     })
@@ -114,12 +114,16 @@ function events(win, games) {
             showing = false
         }
     })
+
+    ipcMain.on("changeSize", (e, data) => {
+        win.setSize(width, height + data - 19)
+    })
 }
 
 function shortcuts(win) {
     globalShortcut.register("Alt+Space", () => {
         if (showing) {
-            clearField()
+            resetView()
             win.hide()
             showing = false
         } else {
@@ -134,7 +138,7 @@ function shortcuts(win) {
         label: "Minimize",
         accelerator: "esc",
         click: function () {
-            clearField()
+            resetView()
             win.hide()
             showing = false
         }
@@ -234,7 +238,7 @@ function executeProgram(filePath) {
     let start = (process.platform === "darwin" ? "open" : process.platform === "win32" ? "start" : "xdg-open")
     cp.exec(start + " " + execPath)
     first = undefined
-    clearField()
+    resetView()
 }
 
 async function searchInDir(query, dir) {
@@ -322,9 +326,11 @@ async function showResult(key) {
             break
     }
     if (res === "") res = "Nothing found!"
-    win.webContents.executeJavaScript(`document.getElementById("games").innerHTML = \`<div>${res}</div>\``)
+    win.webContents.executeJavaScript(`document.getElementById("games").innerHTML = \`<div id="box">${res}</div>\``)
+    win.webContents.send("getDiv")
 }
 
-function clearField() {
+function resetView() {
     win.webContents.executeJavaScript(`document.getElementById("field").value = "";document.getElementById("games").innerHTML = ""; document.getElementById("special").innerHTML = ">"`)
+    win.setSize(width, height)
 }
