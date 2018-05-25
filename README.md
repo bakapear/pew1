@@ -1,5 +1,5 @@
 # pew
-![preview image](http://puu.sh/Ap75J.png)
+![preview image 1](https://puu.sh/AsBpE.png)
 
 #### alt+space launcher for steam built with electron.
 
@@ -45,3 +45,9 @@ You can add custom programs to the search index or give nicknames to existing or
   ]
 }
 ```
+
+### Some other previews
+
+![preview image 2](https://puu.sh/AsBsu.png)
+![preview image 3](https://puu.sh/AsBqR.png)
+![preview image 4](https://puu.sh/AsBrP.png)
