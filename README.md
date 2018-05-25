@@ -10,7 +10,6 @@ Program runs in system-tray to listen for the alt+space shortcut and will open a
 `#` - Code Search <br>
 `?` - Urban Dictionary Search <br>
 `\` - Google Search <br>
-(Not released yet)
 
 [Download the latest version here](https://github.com/bakapear/pew/releases)
 

@@ -6,7 +6,7 @@ let fs = require("fs")
 let got = require("got")
 let cheerio = require("cheerio")
 let Syntax = require("syntax")
-let syntax = new Syntax({ language: "auto", cssPrefix: "" })
+let syntax = new Syntax({ language: "auto", cssPrefix: "", newlineReplace: "<br>" })
 
 app.on("ready", init)
 
@@ -94,7 +94,7 @@ function events(win, games) {
 
     ipcMain.on("onType", (e, data) => {
         if (data[0] === "") {
-            win.webContents.executeJavaScript(`document.getElementById("games").innerHTML = ""`)
+            resetView(data[1])
             return
         }
         field = data[0]
@@ -274,6 +274,7 @@ async function onType(data) {
             text += `<a href="javascript:click(${encodeURIComponent(id)})" tabindex="-1">${name}</a>`
         }
     }
+    if (text === "") win.setSize(width, height)
     win.webContents.executeJavaScript(`document.getElementById("games").innerHTML = \`${text}\``)
 }
 
@@ -286,10 +287,14 @@ async function getCodeSnippet(query) {
         let url = "https://www.bing.com/search?q=" + encodeURIComponent(query)
         let body = (await got(url)).body
         let $ = cheerio.load(body)
-        let snippet = $(".cCodeBg").text()
+        let snippet = ""
+        for (let i = 1; i < 10; i++) {
+            let part = $(`.cCodeBg > div:nth-child(${i})`).text()
+            if (part === "") break
+            snippet += part + "\n"
+        }
         return syntax.richtext(snippet).html()
     } catch (e) { return "" }
-    // --> put $codebg.text() in seperate lines instead of .html | ^001
 }
 
 async function getUrbanDef(query) {
@@ -310,6 +315,7 @@ async function doMath(query) {
 }
 
 async function showResult(key) {
+    win.webContents.executeJavaScript(`document.getElementById("games").innerHTML = \`<div id="box">Loading...</div>\``)
     let res = ""
     switch (key) {
         case "#":
@@ -330,7 +336,8 @@ async function showResult(key) {
     win.webContents.send("getDiv")
 }
 
-function resetView() {
-    win.webContents.executeJavaScript(`document.getElementById("field").value = "";document.getElementById("games").innerHTML = ""; document.getElementById("special").innerHTML = ">"`)
+function resetView(key) {
+    if (!key) key = ">"
+    win.webContents.executeJavaScript(`document.getElementById("field").value = "";document.getElementById("games").innerHTML = ""; document.getElementById("special").innerHTML = "${key}"`)
     win.setSize(width, height)
 }
