@@ -129,3 +129,19 @@ a:focus {
     border-top-right-radius: 5px;
     border-bottom-right-radius: 5px;
 }
+
+#img {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    max-height: 300px;
+    overflow-x: hidden;
+}
+
+#games img {
+    max-width: 780px;
+}
+
+::-webkit-scrollbar {
+    display: none;
+}

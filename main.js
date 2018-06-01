@@ -394,9 +394,9 @@ async function getDiscordChannelMessages(channel) {
     msgs.forEach(msg => {
         let body
         if (msg.attachments.size) {
-            let url = msg.attachments.first().url
+            let url = "'" + msg.attachments.first().url + "'"
             let file = msg.attachments.first().filename
-            body = `<a class=\"link\" href=\"${url}\">${file}</a>`
+            body = `<a class="link" href="javascript:discordImageClick(${encodeURIComponent(url)})">${file}</a>`
         }
         else if (msg.embeds.length) {
             let title = ""
@@ -406,7 +406,8 @@ async function getDiscordChannelMessages(channel) {
                 desc = escapeHtml(msg.embeds[0].description.replace(/\`/g, "").substr(0, 40))
             }
             else if (msg.embeds[0].image) {
-                desc = `<a class=\"link\" href=\"${msg.embeds[0].image.url}\">` + escapeHtml(msg.embeds[0].image.url.substr(0, 40)) + "</a>"
+                let url = msg.embeds[0].image.url
+                desc = `<a class="link" href="javascript:discordImageClick(${encodeURIComponent("'" + url + "'")})">` + escapeHtml(url.substr(0, 40)) + "</a>"
             }
             body = "<span class=\"embed title\">" + title + "</span>" + "<span class=\"embed desc\">" + desc + "</span>"
         }

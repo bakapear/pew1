@@ -37,3 +37,8 @@ window.addEventListener("drop", function (e) {
 function click(data) {
     ipc.send("onClick", decodeURIComponent(data))
 }
+
+function discordImageClick(url) {
+    document.getElementById("games").innerHTML = `<div id="img"><img src="${decodeURIComponent(url)}"></div>`
+    ipc.send("changeSize", 300)
+}
