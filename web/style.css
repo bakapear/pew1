@@ -63,16 +63,6 @@ a:focus {
     outline: none;
 }
 
-#games div {
-    background-color: transparent;
-    margin-top: 7px;
-    margin-left: 15px;
-    float: left;
-    font-size: 1.0em;
-    color: rgba(255, 255, 255, 0.8);
-    font-family: "Consolas", "monospace";
-}
-
 #icon {
     animation: none;
     animation-duration: 1s;
@@ -101,5 +91,41 @@ a:focus {
 }
 
 #games div {
+    background-color: transparent;
+    margin-top: 7px;
+    margin-left: 15px;
+    float: left;
+    font-size: 1.0em;
+    color: rgba(255, 255, 255, 0.8);
+    font-family: "Consolas", "monospace";
     height: auto;
+    width: 96%;
+}
+
+.link {
+    font-size: 1.0em;
+    color: rgb(65, 116, 179);
+    padding: 0;
+    font-weight: 100!important;
+}
+
+.msg {
+    word-break: break-all;
+}
+
+.embed {
+    color: rgb(65, 90, 49);
+    padding: 2px;
+}
+
+.title {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
+}
+
+.desc {
+    background-color: rgba(255, 255, 255, 0.02);
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
 }

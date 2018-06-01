@@ -15,7 +15,7 @@ app.on("ready", init)
 
 let keys = ["#", "?", "/", "=", "@"]
 
-let win, icon, showing, first, cfg, games, field, key, width = 800, height = 120, clientReady = false
+let win, icon, showing, first, cfg, games, field, key, width = 800, height = 120, clientReady = false, chat = false, msglog
 
 async function init() {
     win = new BrowserWindow({
@@ -276,9 +276,8 @@ async function onType(data) {
             let name = res[i].name
             text += `<a href="javascript:click(${encodeURIComponent(id)})" tabindex="-1">${name}</a>`
         }
+        win.webContents.executeJavaScript(`document.getElementById("games").innerHTML = \`${text}\``)
     }
-    if (text === "") win.setSize(width, height)
-    win.webContents.executeJavaScript(`document.getElementById("games").innerHTML = \`${text}\``)
 }
 
 function escapeRegExp(str) {
@@ -319,6 +318,7 @@ async function doMath(query) {
 
 async function sendDiscordMessage(query) {
     query = query.split(">")
+    query = [query.shift(), query.join(">")]
     if (cfg.discord.token === "") return "No Discord Token provided in config!"
     if (cfg.discord.guildId === "") return "No Guild ID specified in config!"
     if (!clientReady) await client.login(cfg.discord.token).then(clientReady = true)
@@ -326,20 +326,29 @@ async function sendDiscordMessage(query) {
     let channel = guild.channels.find("name", query[0])
     if (channel === null) return "Channel not found!"
     if (channel.type !== "text") return "That's not a text channel!"
-    if (!query[1]) {
-        let msgs = await channel.fetchMessages({ limit: 5 })
-        let content = ""
-        msgs.forEach(msg => {
-            content += moment.utc(msg.createdTimestamp).format('HH:mm') + " - <span class=\"literal\">" + escapeHtml(msg.author.username) + "</span>: " + escapeHtml(msg.content) + "<br>"
+    chat = true
+    if (!msglog) {
+        msglog = true
+        client.on("message", async msg => {
+            if (!chat) return
+            if (msg.channel.id !== channel.id) return
+            let content = await getDiscordChannelMessages(channel)
+            win.webContents.executeJavaScript(`document.getElementById("games").innerHTML = \`<div id="box">${content}</div>\``)
+            win.webContents.send("getDiv")
         })
-        return content
     }
-    channel.send(query[1])
-    return `Sent <span class=\"literal\">${escapeHtml(query[1])}</span> to #${escapeHtml(query[0])}.`
+    let content = await getDiscordChannelMessages(channel)
+    if (query[1]) {
+        channel.send(query[1])
+        win.webContents.executeJavaScript(`document.getElementById("field").value = "${query[0]}>"`)
+    }
+    return content
+
 }
 
 async function showResult(key) {
-    win.webContents.executeJavaScript(`document.getElementById("games").innerHTML = \`<div id="box">Loading...</div>\``)
+    if (!chat) win.webContents.executeJavaScript(`document.getElementById("games").innerHTML = \`<div id="box">Loading...</div>\``)
+    chat = false
     let res = ""
     switch (key) {
         case "#":
@@ -364,6 +373,7 @@ async function showResult(key) {
 }
 
 function resetView(key) {
+    chat = false
     if (!key) key = ">"
     win.webContents.executeJavaScript(`document.getElementById("field").value = "";document.getElementById("games").innerHTML = ""; document.getElementById("special").innerHTML = "${key}"`)
     win.setSize(width, height)
@@ -375,5 +385,34 @@ function escapeHtml(unsafe) {
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+        .replace(/'/g, "&#039;")
+}
+
+async function getDiscordChannelMessages(channel) {
+    let msgs = await channel.fetchMessages({ limit: 5 })
+    let content = []
+    msgs.forEach(msg => {
+        let body
+        if (msg.attachments.size) {
+            let url = msg.attachments.first().url
+            let file = msg.attachments.first().filename
+            body = `<a class=\"link\" href=\"${url}\">${file}</a>`
+        }
+        else if (msg.embeds.length) {
+            let title = ""
+            if (msg.embeds[0].title) title = escapeHtml(msg.embeds[0].title.substr(0, 20))
+            let desc = ""
+            if (msg.embeds[0].description) {
+                desc = escapeHtml(msg.embeds[0].description.replace(/\`/g, "").substr(0, 40))
+            }
+            else if (msg.embeds[0].image) {
+                desc = `<a class=\"link\" href=\"${msg.embeds[0].image.url}\">` + escapeHtml(msg.embeds[0].image.url.substr(0, 40)) + "</a>"
+            }
+            body = "<span class=\"embed title\">" + title + "</span>" + "<span class=\"embed desc\">" + desc + "</span>"
+        }
+        else body = escapeHtml(msg.content)
+        let data = moment(msg.createdTimestamp).format('HH:mm') + " - <span class=\"literal\">" + escapeHtml(msg.author.username) + "</span>: " + "<span class=\"msg\">" + body + "</span>" + "<br>"
+        content.push(data)
+    })
+    return content.reverse().join("")
 }
