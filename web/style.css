@@ -134,7 +134,7 @@ a:focus {
     display: flex;
     align-items: center;
     justify-content: center;
-    max-height: 300px;
+    max-height: 350px;
     overflow-x: hidden;
 }
 

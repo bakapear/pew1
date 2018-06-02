@@ -39,6 +39,9 @@ function click(data) {
 }
 
 function discordImageClick(url) {
-    document.getElementById("games").innerHTML = `<div id="img"><img src="${decodeURIComponent(url)}"></div>`
-    ipc.send("changeSize", 300)
+    document.getElementById("games").innerHTML = `<div id="img"><img id="image" src="${decodeURIComponent(url)}"></div>`
+    let img = document.getElementById("image")
+    img.addEventListener("load", () => {
+        ipc.send("changeSize", img.clientHeight < 350 ? img.clientHeight : 350)
+    })
 }
