@@ -15,7 +15,7 @@ app.on("ready", init)
 
 let keys = ["#", "?", "/", "=", "@"]
 
-let win, icon, showing, first, cfg, games, field, key, width = 800, height = 120, clientReady = false, chat = false, msgListener
+let win, icon, showing, first, cfg, games, field, key, width = 800, height = 120, clientReady = false, chat = false, msgListener = false, currentChannel
 
 async function init() {
     win = new BrowserWindow({
@@ -326,13 +326,14 @@ async function sendDiscordMessage(query) {
     let channel = guild.channels.find("name", query[0])
     if (channel === null) return "Channel not found!"
     if (channel.type !== "text") return "That's not a text channel!"
+    currentChannel = channel
     chat = true
     if (!msgListener) {
         msgListener = true
         client.on("message", async msg => {
             if (!chat) return
-            if (msg.channel.id !== channel.id) return
-            let content = await getDiscordChannelMessages(channel)
+            if (msg.channel.id !== currentChannel.id) return
+            let content = await getDiscordChannelMessages(msg.channel)
             win.webContents.executeJavaScript(`document.getElementById("games").innerHTML = \`<div id="box">${content}</div>\``)
             win.webContents.send("getDiv")
         })
