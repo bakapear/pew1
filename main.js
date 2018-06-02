@@ -15,7 +15,7 @@ app.on("ready", init)
 
 let keys = ["#", "?", "/", "=", "@"]
 
-let win, icon, showing, first, cfg, games, field, key, width = 800, height = 120, clientReady = false, chat = false, msglog
+let win, icon, showing, first, cfg, games, field, key, width = 800, height = 120, clientReady = false, chat = false, msgListener
 
 async function init() {
     win = new BrowserWindow({
@@ -327,8 +327,8 @@ async function sendDiscordMessage(query) {
     if (channel === null) return "Channel not found!"
     if (channel.type !== "text") return "That's not a text channel!"
     chat = true
-    if (!msglog) {
-        msglog = true
+    if (!msgListener) {
+        msgListener = true
         client.on("message", async msg => {
             if (!chat) return
             if (msg.channel.id !== channel.id) return
@@ -400,7 +400,7 @@ async function getDiscordChannelMessages(channel) {
         }
         else if (msg.embeds.length) {
             let title = ""
-            if (msg.embeds[0].title) title = escapeHtml(msg.embeds[0].title.substr(0, 20))
+            if (msg.embeds[0].title) title = "<span class=\"embed title\">" + escapeHtml(msg.embeds[0].title.substr(0, 20)) + "</span>"
             let desc = ""
             if (msg.embeds[0].description) {
                 desc = escapeHtml(msg.embeds[0].description.replace(/\`/g, "").substr(0, 40))
@@ -408,8 +408,11 @@ async function getDiscordChannelMessages(channel) {
             else if (msg.embeds[0].image) {
                 let url = msg.embeds[0].image.url
                 desc = `<a class="link" href="javascript:discordImageClick(${encodeURIComponent("'" + url + "'")})">` + escapeHtml(url.substr(0, 40)) + "</a>"
+            } else if (msg.embeds[0].url) {
+                let url = msg.embeds[0].url
+                desc = `<a class="link" href="javascript:discordImageClick(${encodeURIComponent("'" + url + "'")})">` + escapeHtml(url.substr(0, 40)) + "</a>"
             }
-            body = "<span class=\"embed title\">" + title + "</span>" + "<span class=\"embed desc\">" + desc + "</span>"
+            body = title + "<span class=\"embed desc\">" + desc + "</span>"
         }
         else body = escapeHtml(msg.content)
         let data = moment(msg.createdTimestamp).format('HH:mm') + " - <span class=\"literal\">" + escapeHtml(msg.author.username) + "</span>: " + "<span class=\"msg\">" + body + "</span>" + "<br>"
