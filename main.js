@@ -1,6 +1,6 @@
 if (require("electron-squirrel-startup")) return
 
-let { app, BrowserWindow, Menu, Tray, globalShortcut, ipcMain } = require("electron")
+let { clipboard, app, BrowserWindow, Menu, Tray, globalShortcut, ipcMain } = require("electron")
 let cp = require("child_process")
 let fs = require("fs")
 let got = require("got")
@@ -13,7 +13,7 @@ let moment = require("moment")
 
 app.on("ready", init)
 
-let keys = ["#", "?", "/", "=", "@"]
+let keys = ["#", "?", "/", "=", "@", "!"]
 
 let win, icon, showing, first, cfg, games, field, key, width = 800, height = 120, clientReady = false, chat = false, msgListener = false, currentChannel
 
@@ -120,6 +120,10 @@ function events(win, games) {
 
     ipcMain.on("changeSize", (e, data) => {
         win.setSize(width, height + data - 19)
+    })
+
+    ipcMain.on("clipboard", (e, data) => {
+        clipboard.writeText(data, "selection")
     })
 }
 
@@ -347,6 +351,79 @@ async function sendDiscordMessage(query) {
 
 }
 
+async function getDiscordChannelMessages(channel) {
+    let msgs = await channel.fetchMessages({ limit: 5 })
+    let content = []
+    msgs.forEach(msg => {
+        let body
+        if (msg.attachments.size) {
+            let url = "'" + msg.attachments.first().url + "'"
+            let file = msg.attachments.first().filename
+            body = `<a class="link" href="javascript:imageClick(${encodeURIComponent(url)})">${file}</a>`
+        }
+        else if (msg.embeds.length) {
+            let title = ""
+            if (msg.embeds[0].title) title = "<span class=\"embed title\">" + escapeHtml(msg.embeds[0].title.substr(0, 20)) + "</span>"
+            let desc = ""
+            if (msg.embeds[0].description) {
+                desc = escapeHtml(msg.embeds[0].description.replace(/\`/g, "").substr(0, 40))
+            }
+            else if (msg.embeds[0].image) {
+                let url = msg.embeds[0].image.url
+                desc = `<a class="link" href="javascript:imageClick(${encodeURIComponent("'" + url + "'")})">` + escapeHtml(url.substr(0, 40)) + "</a>"
+            } else if (msg.embeds[0].url) {
+                let url = msg.embeds[0].url
+                desc = `<a class="link" href="javascript:imageClick(${encodeURIComponent("'" + url + "'")})">` + escapeHtml(url.substr(0, 40)) + "</a>"
+            }
+            body = title + "<span class=\"embed desc\">" + desc + "</span>"
+        }
+        else body = escapeHtml(msg.content)
+        let data = moment(msg.createdTimestamp).format('HH:mm') + " - <span class=\"literal\">" + escapeHtml(msg.author.username) + "</span>: " + "<span class=\"msg\">" + body + "</span>" + "<br>"
+        content.push(data)
+    })
+    return content.reverse().join("")
+}
+
+async function collectImages(query) {
+    let url = "http://images.google.com/search?tbm=isch&q=" + encodeURIComponent(query)
+    let body = (await got(url, {
+        headers: {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36'
+        }
+    })).body
+    let $ = cheerio.load(body)
+    let meta = $(".rg_meta")
+    let result = []
+    for (let i = 0; i < meta.length; i++) {
+        let data = JSON.parse(meta[i].children[0].data)
+        let item = {
+            original: {
+                url: data.ou,
+                width: data.ow,
+                height: data.oh
+            },
+            thumbnail: {
+                url: data.tu,
+                width: data.tw,
+                height: data.th
+            }
+        }
+        result.push(item)
+    }
+    return result
+}
+
+async function getGoogleImages(query) {
+    let images = await collectImages(query)
+    let output = ""
+    for (let i = 0; i < images.length; i++) {
+        let url = images[i].original.url
+        let thumb = images[i].thumbnail.url
+        output += `<a class="link" href="javascript:imageClick('${encodeURIComponent(url)}')"><img src="${url.endsWith(".gif") ? url : thumb}"></a>`
+    }
+    return output
+}
+
 async function showResult(key) {
     if (!chat) win.webContents.executeJavaScript(`document.getElementById("games").innerHTML = \`<div id="box">Loading...</div>\``)
     chat = false
@@ -367,10 +444,13 @@ async function showResult(key) {
         case "@":
             res = await sendDiscordMessage(field)
             break
+        case "!":
+            res = await getGoogleImages(field)
+            break
     }
     if (res === "") res = "Nothing found!"
     win.webContents.executeJavaScript(`document.getElementById("games").innerHTML = \`<div id="box">${res}</div>\``)
-    win.webContents.send("getDiv")
+    win.webContents.send("getDiv", key)
 }
 
 function resetView(key) {
@@ -387,37 +467,4 @@ function escapeHtml(unsafe) {
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;")
-}
-
-async function getDiscordChannelMessages(channel) {
-    let msgs = await channel.fetchMessages({ limit: 5 })
-    let content = []
-    msgs.forEach(msg => {
-        let body
-        if (msg.attachments.size) {
-            let url = "'" + msg.attachments.first().url + "'"
-            let file = msg.attachments.first().filename
-            body = `<a class="link" href="javascript:discordImageClick(${encodeURIComponent(url)})">${file}</a>`
-        }
-        else if (msg.embeds.length) {
-            let title = ""
-            if (msg.embeds[0].title) title = "<span class=\"embed title\">" + escapeHtml(msg.embeds[0].title.substr(0, 20)) + "</span>"
-            let desc = ""
-            if (msg.embeds[0].description) {
-                desc = escapeHtml(msg.embeds[0].description.replace(/\`/g, "").substr(0, 40))
-            }
-            else if (msg.embeds[0].image) {
-                let url = msg.embeds[0].image.url
-                desc = `<a class="link" href="javascript:discordImageClick(${encodeURIComponent("'" + url + "'")})">` + escapeHtml(url.substr(0, 40)) + "</a>"
-            } else if (msg.embeds[0].url) {
-                let url = msg.embeds[0].url
-                desc = `<a class="link" href="javascript:discordImageClick(${encodeURIComponent("'" + url + "'")})">` + escapeHtml(url.substr(0, 40)) + "</a>"
-            }
-            body = title + "<span class=\"embed desc\">" + desc + "</span>"
-        }
-        else body = escapeHtml(msg.content)
-        let data = moment(msg.createdTimestamp).format('HH:mm') + " - <span class=\"literal\">" + escapeHtml(msg.author.username) + "</span>: " + "<span class=\"msg\">" + body + "</span>" + "<br>"
-        content.push(data)
-    })
-    return content.reverse().join("")
 }

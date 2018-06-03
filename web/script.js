@@ -1,6 +1,6 @@
 let ipc = require("electron").ipcRenderer
 
-let keys = [">", "#", "?", "/", "=", "@"]
+let keys = [">", "#", "?", "/", "=", "@", "!"]
 
 window.onload = function () {
     let input = document.getElementById("field")
@@ -18,8 +18,9 @@ window.onload = function () {
             this.focus()
         }
     })
-    ipc.on("getDiv", () => {
+    ipc.on("getDiv", (e, key) => {
         let height = document.getElementById("box").clientHeight
+        if (key === "!") height = 350
         ipc.send("changeSize", height)
     })
 }
@@ -38,10 +39,15 @@ function click(data) {
     ipc.send("onClick", decodeURIComponent(data))
 }
 
-function discordImageClick(url) {
-    document.getElementById("games").innerHTML = `<div id="img"><img id="image" src="${decodeURIComponent(url)}"></div>`
+function imageClick(url) {
+    document.getElementById("games").innerHTML = `<div id="img"><img id="image" onclick="" src="${decodeURIComponent(url)}"></div>`
     let img = document.getElementById("image")
     img.addEventListener("load", () => {
         ipc.send("changeSize", img.clientHeight < 350 ? img.clientHeight : 350)
     })
+    img.onclick = function () {
+        ipc.send("clipboard", img.src)
+        document.getElementById("games").innerHTML = "<div id=\"box\">Copied to clipboard!</div>"
+        ipc.send("changeSize", document.getElementById("box").clientHeight)
+    }
 }
