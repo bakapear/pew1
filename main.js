@@ -426,6 +426,7 @@ async function getGoogleImages(query) {
 
 async function showResult(key) {
     if (!chat) win.webContents.executeJavaScript(`document.getElementById("games").innerHTML = \`<div id="box">Loading...</div>\``)
+    win.webContents.send("getDiv", "")
     chat = false
     let res = ""
     switch (key) {
@@ -448,9 +449,13 @@ async function showResult(key) {
             res = await getGoogleImages(field)
             break
     }
-    if (res === "") res = "Nothing found!"
+    let op = key
+    if (res === "") {
+        res = "Nothing found!"
+        op = ""
+    }
     win.webContents.executeJavaScript(`document.getElementById("games").innerHTML = \`<div id="box">${res}</div>\``)
-    win.webContents.send("getDiv", key)
+    win.webContents.send("getDiv", op)
 }
 
 function resetView(key) {
