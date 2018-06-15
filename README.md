@@ -11,7 +11,8 @@ Program runs in system-tray to listen for the alt+space shortcut and will open a
 `>` - Steam Game Search <br>
 `#` - Code Search <br>
 `?` - Urban Dictionary Search <br>
-`\` - Google Search <br>
+`/` - Google Web Search <br> (experimental)
+`!` - Google Image Search <br>
 `@` - Discord Channel Messages <br>
 
 ### Configuration / Custom Programs
@@ -72,3 +73,5 @@ You can add custom programs to the search index or give nicknames to existing or
 ![preview image 4](https://puu.sh/AsBrP.png)
 ![preview image 5](https://puu.sh/AsBAd.png)
 ![preview image 6](https://puu.sh/AxB4n.png)
+![preview image 7](https://puu.sh/AFM0y.png)
+![preview image 8](https://puu.sh/AFM2V.png)
