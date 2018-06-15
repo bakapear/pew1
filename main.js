@@ -488,22 +488,24 @@ async function searchGoogle(query) {
 }
 
 async function getGoogleResults(query) {
-    let url = "https://google.com/search?num=35&q=" + encodeURIComponent(query)
-    let body = (await got(url, {
-        headers: {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.78 Safari/537.36"
+    try {
+        let url = "https://google.com/search?num=35&q=" + encodeURIComponent(query)
+        let body = (await got(url, {
+            headers: {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.78 Safari/537.36"
+            }
+        })).body
+        let $ = cheerio.load(body)
+        let results = $(".srg > .g > div > .rc")
+        let output = []
+        for (let i = 0; i < results.length; i++) {
+            let item = {
+                title: $(results[i].children[0]).text(),
+                url: results[i].children[0].children[0].attribs.href,
+                desc: $(results[i].children[1].children[0].children[1]).text()
+            }
+            output.push(item)
         }
-    })).body
-    let $ = cheerio.load(body)
-    let results = $(".srg > .g > div > .rc")
-    let output = []
-    for (let i = 0; i < results.length; i++) {
-        let item = {
-            title: $(results[i].children[0]).text(),
-            url: results[i].children[0].children[0].attribs.href,
-            desc: $(results[i].children[1].children[0].children[1]).text()
-        }
-        output.push(item)
-    }
-    return output
+        return output
+    } catch (e) { return e.response.body }
 }
