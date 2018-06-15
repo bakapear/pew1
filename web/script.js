@@ -40,6 +40,7 @@ function click(data) {
 }
 
 function imageClick(url) {
+    ipc.send("chat", false)
     document.getElementById("games").innerHTML = `<div id="img"><img id="image" onclick="" src="${decodeURIComponent(url)}"></div>`
     let img = document.getElementById("image")
     img.addEventListener("load", () => {

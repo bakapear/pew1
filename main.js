@@ -105,6 +105,10 @@ function events(win, games) {
         onType(data[0])
     })
 
+    ipcMain.on("chat", (e, bool) => {
+        chat = bool
+    })
+
     ipcMain.on("onClick", (e, data) => {
         if (isNaN(data) && data.startsWith("path:")) {
             let cut = data.substr(data.indexOf(":/") - 1, data.length) + "/"
@@ -437,8 +441,8 @@ async function showResult(key) {
             res = await getUrbanDef(field)
             break
         case "/":
-            cp.exec("start https://google.com/search?q=" + encodeURIComponent(field))
-            return
+            res = await searchGoogle(field)
+            break
         case "=":
             res = await doMath(field)
             break
@@ -472,4 +476,34 @@ function escapeHtml(unsafe) {
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;")
+}
+
+async function searchGoogle(query) {
+    let data = await getGoogleResults(query)
+    let output = ""
+    for (let i = 0; i < data.length; i++) {
+        output += `<a href="${data[i].url}"><div class="googres"><h3>${escapeHtml(data[i].title)}</h3><p>${escapeHtml(data[i].desc)}</p></div></a>`
+    }
+    return output
+}
+
+async function getGoogleResults(query) {
+    let url = "https://google.com/search?num=35&q=" + encodeURIComponent(query)
+    let body = (await got(url, {
+        headers: {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.78 Safari/537.36"
+        }
+    })).body
+    let $ = cheerio.load(body)
+    let results = $(".srg > .g > div > .rc")
+    let output = []
+    for (let i = 0; i < results.length; i++) {
+        let item = {
+            title: $(results[i].children[0]).text(),
+            url: results[i].children[0].children[0].attribs.href,
+            desc: $(results[i].children[1].children[0].children[1]).text()
+        }
+        output.push(item)
+    }
+    return output
 }
