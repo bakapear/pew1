@@ -11,7 +11,7 @@ Program runs in system-tray to listen for the alt+space shortcut and will open a
 `>` - Steam Game Search <br>
 `#` - Code Search <br>
 `?` - Urban Dictionary Search <br>
-`/` - Google Web Search <br> (experimental)
+`/` - Google Web Search (experimental) <br>
 `!` - Google Image Search <br>
 `@` - Discord Channel Messages <br>
 
