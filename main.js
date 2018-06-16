@@ -13,7 +13,7 @@ let moment = require("moment")
 
 app.on("ready", init)
 
-let keys = ["#", "?", "/", "=", "@", "!"]
+let keys = ["#", "?", "/", "=", "@", "!", "$"]
 
 let win, icon, showing, first, cfg, games, field, key, width = 800, height = 120, clientReady = false, chat = false, msgListener = false, currentChannel
 
@@ -452,6 +452,8 @@ async function showResult(key) {
         case "!":
             res = await getGoogleImages(field)
             break
+        case "$":
+            res = await searchMetaSounds(field)
     }
     let op = key
     if (res === "") {
@@ -508,4 +510,31 @@ async function getGoogleResults(query) {
         }
         return output
     } catch (e) { return e.response.body }
+}
+
+async function getMetaResults(query) {
+    try {
+        let url = "https://api.github.com/search/code?q=in:path+sound/chatsounds/autoadd+repo:Metastruct/garrysmod-chatsounds+" + encodeURIComponent(query)
+        let body = (await got(url, { json: true })).body
+        let output = []
+        for (let i = 0; i < body.items.length; i++) {
+            let url = body.items[i].html_url
+            url = url.substr(url.indexOf("/blob/") + 6)
+            let item = {
+                name: body.items[i].name,
+                path: "https://raw.githubusercontent.com/Metastruct/garrysmod-chatsounds/" + url
+            }
+            output.push(item)
+        }
+        return output
+    } catch (e) { return e.response.body }
+}
+
+async function searchMetaSounds(query) {
+    let data = await getMetaResults(query)
+    let output = ""
+    for (let i = 0; i < data.length; i++) {
+        output += `<audio controls><source src="${data[i].path}" type="audio/ogg"></audio>`
+    }
+    return output
 }
