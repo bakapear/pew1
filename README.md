@@ -1,5 +1,5 @@
 # pew
-![preview image 1](https://puu.sh/AxB7h.png)
+![preview image 1](https://b.catgirlsare.sexy/i6Hz.png)
 
 #### alt+space launcher built with electron.
 
@@ -64,14 +64,3 @@ You can add custom programs to the search index or give nicknames to existing or
     }
 }
 ```
-
-### Some other previews
-
-![preview image 1](https://puu.sh/AsBpE.png)
-![preview image 2](https://puu.sh/AsBsu.png)
-![preview image 3](https://puu.sh/AsBqR.png)
-![preview image 4](https://puu.sh/AsBrP.png)
-![preview image 5](https://puu.sh/AsBAd.png)
-![preview image 6](https://puu.sh/AxB4n.png)
-![preview image 7](https://puu.sh/AFM0y.png)
-![preview image 8](https://puu.sh/AFM2V.png)
